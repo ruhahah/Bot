@@ -11,6 +11,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import db
 from callbacks import AnswerQuestionFactory, CancelBookingFactory, DayCallbackFactory, FaqCallbackFactory, LangCallbackFactory, TimeCallbackFactory
 from config import load_config
+from google_sheets import add_lesson_record
 from i18n import FAQ_DATA, all_texts, day_name as i18n_day_name, get_lang, set_lang, t
 from keyboards.inline import (
     BACK_TO_DAYS, EDIT_PROFILE, MY_BOOKINGS, NEW_BOOKING,
@@ -486,6 +487,19 @@ async def cb_time_selected(callback: CallbackQuery, callback_data: TimeCallbackF
                topic=topic, day=dn, time=time),
     )
     logger.info("Заявка на доп. урок от %s: %s %s", student_name, dn, time)
+
+    # Save to Google Sheets
+    if cfg.google_sheets_id:
+        try:
+            await add_lesson_record(
+                student_name=student_name,
+                username=username,
+                day=dn,
+                time=time,
+                spreadsheet_key=cfg.google_sheets_id,
+            )
+        except Exception as e:
+            logger.error("Failed to save to Google Sheets: %s", e)
 
     await callback.message.answer(t(uid, "main_menu"), reply_markup=main_keyboard(lang))
     await callback.answer()

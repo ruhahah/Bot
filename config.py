@@ -10,6 +10,7 @@ load_dotenv()
 class Config:
     bot_token: str
     admin_id: int
+    google_sheets_id: str
 
 
 def load_config() -> Config:
@@ -19,4 +20,5 @@ def load_config() -> Config:
     return Config(
         bot_token=token,
         admin_id=int(os.getenv("ADMIN_ID", "0")),
+        google_sheets_id=os.getenv("GOOGLE_SHEETS_ID", ""),
     )
