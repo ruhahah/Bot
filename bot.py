@@ -1,6 +1,8 @@
 import asyncio
 import logging
+import os
 
+from aiohttp import web
 from aiogram import Bot, Dispatcher
 
 import db
@@ -14,6 +16,21 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+async def handle_root(request: web.Request) -> web.Response:
+    return web.Response(text="Bot is running")
+
+
+async def start_web_server(port: int) -> web.AppRunner:
+    app = web.Application()
+    app.router.add_get("/", handle_root)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    logger.info(f"Web server started on port {port}")
+    return runner
 
 
 async def main() -> None:
@@ -35,8 +52,14 @@ async def main() -> None:
     await restore_reminders(bot)
     start_daily_digest(bot)
 
+    port = int(os.getenv("PORT", 8080))
+    runner = await start_web_server(port)
+
     logger.info("Бот запускается...")
-    await dp.start_polling(bot)
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await runner.cleanup()
 
 
 if __name__ == "__main__":
