@@ -14,7 +14,7 @@ class GoogleSheetsManager:
 
     async def authorize(self):
         if self._client is None:
-            agcm = gspread_asyncio.AsyncGspreadClientManager(
+            agcm = gspread_asyncio.AsyncioGspreadClientManager(
                 lambda: gspread.service_account(filename=self.credentials_path)
             )
             self._client = await agcm.authorize()
