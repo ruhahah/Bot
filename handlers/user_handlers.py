@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from aiogram import Bot, F, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -31,6 +31,27 @@ cfg = load_config()
 
 # Часовой пояс UTC+5 (Казахстан)
 TZ = timezone(timedelta(hours=5))
+
+
+# ─── Тест файловой системы ───────────────────────────────────────────────────
+
+@router.message(Command("save_test"))
+async def cmd_save_test(message: Message) -> None:
+    from datetime import datetime
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("test_data.txt", "w", encoding="utf-8") as f:
+        f.write(f"Тестовая запись: {now}")
+    await message.answer("✅ Данные записаны в файл")
+
+
+@router.message(Command("read_test"))
+async def cmd_read_test(message: Message) -> None:
+    try:
+        with open("test_data.txt", "r", encoding="utf-8") as f:
+            content = f.read()
+        await message.answer(f"📄 Содержимое файла:\n\n{content}")
+    except FileNotFoundError:
+        await message.answer("❌ Файла не существует. Данные были удалены!")
 
 
 # ─── /start + выбор языка ─────────────────────────────────────────────────────
