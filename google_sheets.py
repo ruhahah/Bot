@@ -1,9 +1,20 @@
 import gspread
 import gspread_asyncio
+from google.oauth2.service_account import Credentials
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def get_creds(credentials_path: str = "credentials.json"):
+    scopes = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    creds = Credentials.from_service_account_file(credentials_path)
+    return creds.with_scopes(scopes)
 
 
 class GoogleSheetsManager:
@@ -15,7 +26,7 @@ class GoogleSheetsManager:
     async def authorize(self):
         if self._client is None:
             agcm = gspread_asyncio.AsyncioGspreadClientManager(
-                lambda: gspread.service_account(filename=self.credentials_path)
+                lambda: get_creds(self.credentials_path)
             )
             self._client = await agcm.authorize()
         return self._client
