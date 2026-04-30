@@ -572,6 +572,16 @@ TEXTS: dict[str, dict[str, str]] = {
         "kk": "❌ Болдырмау",
         "en": "❌ Cancel",
     },
+    "adm_btn_delete_question": {
+        "ru": "🗑 Удалить",
+        "kk": "🗑 Жою",
+        "en": "🗑 Delete",
+    },
+    "adm_question_deleted": {
+        "ru": "🗑 Вопрос удалён.",
+        "kk": "🗑 Сұрақ жойылды.",
+        "en": "🗑 Question deleted.",
+    },
 }
 
 

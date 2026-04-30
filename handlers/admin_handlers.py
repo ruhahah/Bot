@@ -9,7 +9,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import db
 from config import load_config
-from callbacks import AdminCancelBookingFactory, AnswerQuestionFactory, BanCallbackFactory, LangCallbackFactory
+from callbacks import AdminCancelBookingFactory, AnswerQuestionFactory, BanCallbackFactory, DeleteQuestionFactory, LangCallbackFactory
 from handlers.user_handlers import forwarded_map
 from i18n import TEXTS, WEEKDAYS, day_name, get_lang, set_lang, t
 from keyboards.inline import lang_keyboard
@@ -294,6 +294,7 @@ async def cmd_questions(message: Message) -> None:
     lines = [t(uid, "adm_questions_title")]
     builder = InlineKeyboardBuilder()
     answer_label = TEXTS["adm_btn_answer"].get(lang, "✏️")
+    delete_label = TEXTS["adm_btn_delete_question"].get(lang, "🗑")
     for i, q in enumerate(questions, 1):
         name = q["student_name"] or f"ID {q['user_id']}"
         status = "✅" if q["answer_text"] else "⏳"
@@ -303,11 +304,21 @@ async def cmd_questions(message: Message) -> None:
         )
         if q["answer_text"]:
             lines.append(f"   💬 {q['answer_text'][:80]}")
-        else:
             builder.row(InlineKeyboardButton(
-                text=f"{answer_label} #{i} — {name}",
-                callback_data=AnswerQuestionFactory(question_id=q["id"]).pack(),
+                text=f"{delete_label} #{i} — {name}",
+                callback_data=DeleteQuestionFactory(question_id=q["id"]).pack(),
             ))
+        else:
+            builder.row(
+                InlineKeyboardButton(
+                    text=f"{answer_label} #{i} — {name}",
+                    callback_data=AnswerQuestionFactory(question_id=q["id"]).pack(),
+                ),
+                InlineKeyboardButton(
+                    text=f"{delete_label} #{i}",
+                    callback_data=DeleteQuestionFactory(question_id=q["id"]).pack(),
+                ),
+            )
         lines.append("")
     markup = builder.as_markup() if builder.buttons else None
     await message.answer("\n".join(lines).strip(), parse_mode="HTML",
@@ -507,6 +518,22 @@ async def fsm_answer_question(message: Message, state: FSMContext, bot: Bot) -> 
     await message.answer(t(uid, "adm_answer_sent"),
                          reply_markup=admin_keyboard(lang))
     logger.info("Админ ответил на вопрос #%s для ученика %s", question_id, user_id)
+
+
+# ─── Удаление вопроса через inline-кнопку ────────────────────────────────────
+
+@router.callback_query(DeleteQuestionFactory.filter(), IS_ADMIN_CB)
+async def cb_delete_question(callback: CallbackQuery,
+                             callback_data: DeleteQuestionFactory) -> None:
+    uid = callback.from_user.id
+    lang = _lang(uid)
+    ok = await db.delete_question(callback_data.question_id)
+    if ok:
+        await callback.message.edit_text(t(uid, "adm_question_deleted"))
+    else:
+        await callback.answer("Not found", show_alert=True)
+        return
+    await callback.answer()
 
 
 # ─── Бан пользователей ───────────────────────────────────────────────────────

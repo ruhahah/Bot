@@ -30,6 +30,10 @@ class AnswerQuestionFactory(CallbackData, prefix="ansq", sep="|"):
     question_id: int
 
 
+class DeleteQuestionFactory(CallbackData, prefix="delq", sep="|"):
+    question_id: int
+
+
 class BanCallbackFactory(CallbackData, prefix="ban", sep="|"):
     user_id: int
     action: str

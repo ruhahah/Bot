@@ -326,6 +326,15 @@ async def get_user_questions(user_id: int, limit: int = 10) -> list[dict]:
         return [dict(row) for row in await cursor.fetchall()]
 
 
+async def delete_question(question_id: int) -> bool:
+    async with aiosqlite.connect(DB_PATH) as conn:
+        cursor = await conn.execute(
+            "DELETE FROM questions WHERE id = ?", (question_id,)
+        )
+        await conn.commit()
+        return cursor.rowcount > 0
+
+
 async def get_all_questions(limit: int = 30) -> list[dict]:
     async with aiosqlite.connect(DB_PATH) as conn:
         conn.row_factory = aiosqlite.Row
